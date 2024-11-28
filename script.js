@@ -76,40 +76,57 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Step 3: Generate Stimuli
-  function generateStimuli() {
-    stimuli = Array(numTrials)
-      .fill(null)
-      .map(() => ({
-        type: "target",
-        shape: testType === "icon" ? targetIcon : randomShape(),
-        color: testType === "color" ? targetColor : randomColor()
-      }));
-    stimuli = stimuli.concat(
-      Array(Math.floor(numTrials * 0.5))
-        .fill(null)
-        .map(() => ({
-          type: "non-target",
-          shape: randomShape(),
-          color: randomColor()
-        }))
-    );
-    stimuli = shuffleArray(stimuli);
+function generateStimuli() {
+  const numDistractors = numTrials; // Equal number of distractors and targets
+  const totalTrials = numTrials + numDistractors; // Total trials = targets + distractors
+
+  // Generate target stimuli
+  const targetStimuli = Array(numTrials)
+    .fill(null)
+    .map(() => ({
+      type: "target",
+      shape: testType === "icon" ? targetIcon : randomShape(),
+      color: testType === "color" ? targetColor : randomColor()
+    }));
+
+  // Generate distractor stimuli
+  const distractorStimuli = Array(numDistractors)
+    .fill(null)
+    .map(() => ({
+      type: "non-target",
+      shape: randomShape(),
+      color: randomColor()
+    }));
+
+  // Combine and shuffle the stimuli
+  stimuli = shuffleArray([...targetStimuli, ...distractorStimuli]);
+
+  console.log(`Generated Stimuli: ${stimuli.length} trials (${numTrials} targets, ${numDistractors} distractors)`);
+}
+
+// Utility function to shuffle the array
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]]; // Swap elements
   }
+  return array;
+}
 
   // Step 4: Show Stimulus
   function showStimulus() {
     if (currentStimulusIndex >= stimuli.length) {
-      endTest();
+      endTest(); // End test after all trials
       return;
     }
-
+  
     const stimulus = stimuli[currentStimulusIndex];
     currentStimulusIndex++;
-
+  
     renderShape(stimulus.shape, stimulus.color);
     startTime = Date.now();
     acceptingInput = true; // Enable space bar input
-
+  
     // Set a timeout for handling no reaction
     reactionTimeout = setTimeout(() => {
       if (acceptingInput) {
@@ -117,6 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }, timeoutMs);
   }
+  
 
   // Step 5: Render SVG Shape
   function renderShape(shape, color) {
